@@ -1,0 +1,54 @@
+{
+  "name": "dsh-pet-sayaka",
+  "version": "1.0.0",
+  "description": "美树沙耶香桌宠：把会话状态变成表情、台词与配音——没事睡觉、跑代码拔刀、报错伤心、成功高兴。Sayaka Miki desktop pet for the DeepSeek Harness Web UI.",
+  "author": "KOGGUA-EDIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KOGGUA-EDIT/dsh-pet-sayaka.git"
+  },
+  "homepage": "https://github.com/KOGGUA-EDIT/dsh-pet-sayaka#readme",
+  "bugs": {
+    "url": "https://github.com/KOGGUA-EDIT/dsh-pet-sayaka/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop-pet",
+    "pet",
+    "sayaka",
+    "madoka"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "assets/pet",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  }
+}

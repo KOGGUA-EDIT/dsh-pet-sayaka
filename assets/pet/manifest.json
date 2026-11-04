@@ -1,0 +1,15 @@
+{
+  "width": 784,
+  "height": 720,
+  "ratio": 1.088889,
+  "sprites": [
+    "sleep",
+    "thinking",
+    "sword",
+    "sad",
+    "shy",
+    "angry",
+    "happy",
+    "calm"
+  ]
+}

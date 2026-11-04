@@ -1,0 +1,58 @@
+# ============================================================================
+# dsh-pet-sayaka 的挂载声明（bundle patch）
+# ============================================================================
+#
+# 【这是什么】
+#   DSH 启动时按 bundle 层栈把各插件的 patch 叠起来组成配置树，这个文件就是
+#   本插件那一层：往树里插一行 `dsh-pet-sayaka`。
+#
+# 【工作原理】
+#   - insert：新增插件行；id 是行标识（patch 覆盖时按它定位），name 是模块名
+#   - name: 'dsh-pet-sayaka' → 解析到本包 package.json 的 main（lib/index.js，宿主半侧）
+#   - 因为 package.json 里声明了 dsh.client，DSH 的模块系统会同时把本包
+#     当作"浏览器插件"，把 lib/client.js 作为 /plugins/dsh-pet-sayaka/client.js
+#     提供给页面（页面加载时自动挂上桌宠）
+#
+# 【config】
+#   下面这些值会传给宿主半侧的 apply(ctx, config)，也就是 PetState 的配置。
+#   改完需要重启 Web 服务生效（「⋯」菜单 → 重启 Web 服务）。
+#
+# ============================================================================
+
+- insert:
+    - id: dsh-pet-sayaka
+      name: 'dsh-pet-sayaka'
+      config:
+        # 是否启用（false 时宿主不再推送状态）
+        enabled: true
+        # 桌宠展示高度（CSS px）。浏览器端设置面板里还能单独再调
+        size: 280
+        # 跑出错的「伤心」时长
+        sadMs: 5000
+        # 跑成功的「高兴」时长
+        happyMs: 5000
+        # 第一次跑完代码之后，「平常心」持续多久，之后回到睡觉
+        calmMs: 60000
+        # 被点一下的「害羞」时长
+        shyMs: 1000
+        # 十秒内点够几下算「生气」
+        clickThreshold: 5
+        clickWindowMs: 10000
+        # 「生气」持续时长
+        angryMs: 3000
+        # 是否跟随子 Agent 的活动
+        includeSubagents: true
+        # 独白气泡出现多久（毫秒）—— 每个状态刚切换时冒一下
+        monologueMs: 1000
+        # 各状态台词（想改词就取消下面注释、只写要改的那几句；会与内置默认逐键合并）
+        # monologues:
+        #   thinking: emmmmm
+        #   sword: 武装保卫见泷原！
+        #   sad: 呜呜呜
+        #   happy: 耶✌️
+        #   shy: 不要这样啦
+        #   angry: 我生气了！！！
+        #   calm: 快来吧
+        #   sleep: ''            # 空字符串 = 不说话
+        # 哪些工具调用算「跑代码」（命中即拔刀）
+        runToolPattern: '^(bash|pwsh|powershell|shell|sh|cmd|zsh|fish|exec|command|terminal|run)$'
