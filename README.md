@@ -1,5 +1,8 @@
 # dsh-pet-sayaka 🎴
 
+[![npm](https://img.shields.io/npm/v/dsh-pet-sayaka?color=blue)](https://www.npmjs.com/package/dsh-pet-sayaka)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 > **English summary** — Sayaka Miki desktop pet for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI. Live session state is mapped onto eight sprites (idle sleep, sword while shell tools run, sad on failure, happy on success, thinking, calm, shy when poked, angry after five pokes in ten seconds); sprites swap instantly with no cross-fade; and a short per-state voice line plays every 8–15 encounters with that state, plus a one-time "good morning" line after the app starts.
 
 美树沙耶香桌宠，住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）Web 界面右下角。
@@ -52,6 +55,18 @@
 DSH 设置页 **sayaka** 分区里的「配音」开关能一键关掉声音。
 
 ---
+
+## 安装
+
+```bash
+# 从 npm（推荐）
+dsh plugin --profile web add dsh-pet-sayaka
+
+# 或者直接从 GitHub 装
+dsh plugin --profile web add github:KOGGUA-EDIT/dsh-pet-sayaka
+```
+
+装完重启一次 Web 服务（DSH 标题栏「⋯」→ 重启 Web 服务），刷新页面就能在右下角看到她。
 
 ## 安装状态（本机）
 
