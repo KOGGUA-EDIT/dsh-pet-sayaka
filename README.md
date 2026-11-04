@@ -35,6 +35,28 @@
 > 云朵是照着那张云图**描摹出来的 SVG path**（不是位图），文字按字数自动缩放塞在云肚子里，
 > 尾巴尖永远对着她的头顶。睡觉 / 平常心这类长状态不会一直挂着字 —— 只在切换那一秒冒出来。
 
+## 八张脸
+
+运行时用的就是这八张立绘（`assets/pet/<state>.png`，784×720 透明底，直接切换、没有淡入淡出）：
+
+<table>
+  <tr>
+    <td align="center"><img src="assets/pet/sleep.png" width="150" alt="睡觉"><br><b>睡觉</b><br><sub>sleep</sub></td>
+    <td align="center"><img src="assets/pet/thinking.png" width="150" alt="思考"><br><b>思考</b><br><sub>thinking</sub></td>
+    <td align="center"><img src="assets/pet/sword.png" width="150" alt="拔刀"><br><b>拔刀</b><br><sub>sword</sub></td>
+    <td align="center"><img src="assets/pet/sad.png" width="150" alt="伤心"><br><b>伤心</b><br><sub>sad</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/pet/happy.png" width="150" alt="高兴"><br><b>高兴</b><br><sub>happy</sub></td>
+    <td align="center"><img src="assets/pet/calm.png" width="150" alt="平常心"><br><b>平常心</b><br><sub>calm</sub></td>
+    <td align="center"><img src="assets/pet/shy.png" width="150" alt="害羞"><br><b>害羞</b><br><sub>shy</sub></td>
+    <td align="center"><img src="assets/pet/angry.png" width="150" alt="生气"><br><b>生气</b><br><sub>angry</sub></td>
+  </tr>
+</table>
+
+> 这八张是从原始大图切好、去底、压过的版本（一张 75~95 KB），所以 npm 包里也只带这些；
+> 仓库里没有放 1 MB 级原图，免得把包撑到 10 MB。原始 PNG 在开发目录里，需要的话可以另外发。
+
 ## 配音
 
 每个状态都有一段录音（`assets/pet/<state>.wav`），跟着状态播放：
