@@ -4,7 +4,7 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![release](https://img.shields.io/github/v/release/KOGGUA-EDIT/dsh-pet-sayaka?display_name=tag&sort=semver)](https://github.com/KOGGUA-EDIT/dsh-pet-sayaka/releases)
 
-> **English summary** — Sayaka Miki desktop pet for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI. Live session state is mapped onto eight sprites (idle sleep, sword while shell tools run, sad on failure, happy on success, thinking, calm, shy when poked, angry after five pokes in ten seconds); sprites swap instantly with no cross-fade; and a short per-state voice line plays every 8–15 encounters with that state, plus a one-time "good morning" line after the app starts.
+> **English summary** — Sayaka Miki desktop pet for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI. Live session state is mapped onto eight sprites (idle sleep, sword while shell tools run, sad on failure, happy on success, thinking, calm, shy when poked, angry after five pokes in ten seconds); sprites swap instantly with no cross-fade; and a short per-state voice line plays every 5–8 encounters with that state, plus a one-time "good morning" line after the app starts.
 
 美树沙耶香桌宠，住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）Web 界面右下角。
 她把 DSH 的会话状态翻译成表情：**没事就睡觉，跑代码拔刀，出错伤心，成功高兴。**
@@ -58,6 +58,25 @@
 > 这八张是从原始大图切好、去底、压过的版本（一张 75~95 KB），所以 npm 包里也只带这些；
 > 仓库里没有放 1 MB 级原图，免得把包撑到 10 MB。原始 PNG 在开发目录里，需要的话可以另外发。
 
+## 交相呼应
+
+光按状态换脸容易显得死板：明明连着出错，她还是同一句「呜呜呜」。所以同一个状态**累计**碰到第几次，会换一句更像在回应的台词，必要时连表情和录音一起换：
+
+| 状态 | 第几次 | 她说什么 | 顺带 |
+|---|---|---|---|
+| 伤心 | 2 | 又错了… | — |
+| 伤心 | **5** | **气死我了！！！** | 表情切生气 + `angry.wav` |
+| 伤心 | 9 | 今天是不是不太顺啊 | 然后清零重新数 |
+| 高兴 | 2 | 嘿嘿，成了 | — |
+| 高兴 | 5 | 今天手感不错嘛 | 然后清零重新数 |
+| 拔刀 | 2 | 又在跑命令… | — |
+| 拔刀 | 5 | 我是不是工具人啊 | 然后清零重新数 |
+| 思考 | 3 | 想不出来… | 然后清零重新数 |
+| 平常心 | 2 | 好闲啊 | 然后清零重新数 |
+| 被连点 | 10 秒 5 下 | 别戳了！！！ | 生气表情 + `angry.wav` |
+
+规则在 `lib/client.js` 的 `QUIPS` 表里，加一条就是加一行；`at` 是「这个状态这一轮累计到第几次」。走到最后一档会清零，所以是**每错五次气一次**，下一个五次还会再气，而不是只气开头那一回。
+
 ## 配音
 
 每个状态都有一段录音（`assets/pet/<state>.wav`），跟着状态播放：
@@ -65,16 +84,16 @@
 | 播报 | 文件 | 什么时候播 |
 |---|---|---|
 | 早上好 | `morning.wav` | 每次**启动**后说第一句（刷新页面不重播；浏览器拦住自动播放时，会在你第一次点/按键时补上） |
-| 拔刀 | `sword.wav` | 每攒够 8~15 次「拔刀」播一次 |
-| 高兴 | `happy.wav` | 每攒够 8~15 次「高兴」播一次 |
-| 害羞 | `shy.wav` | 每攒够 8~15 次「害羞」播一次 |
-| 伤心 | `sad.wav` | 每攒够 8~15 次「伤心」播一次 |
-| 思考 | `thinking.wav` | 每攒够 8~15 次「思考」播一次 |
-| 生气 | `angry.wav` | 每攒够 8~15 次「生气」播一次 |
-| 睡觉 | `sleep.wav` | 每攒够 8~15 次「睡觉」播一次 |
+| 拔刀 | `sword.wav` | 每攒够 5~8 次「拔刀」播一次 |
+| 高兴 | `happy.wav` | 每攒够 5~8 次「高兴」播一次 |
+| 害羞 | `shy.wav` | 每攒够 5~8 次「害羞」播一次 |
+| 伤心 | `sad.wav` | 每攒够 5~8 次「伤心」播一次 |
+| 思考 | `thinking.wav` | 每攒够 5~8 次「思考」播一次 |
+| 生气 | `angry.wav` | 每攒够 5~8 次「生气」播一次 |
+| 睡觉 | `sleep.wav` | 每攒够 5~8 次「睡觉」播一次 |
 
 「攒够几次」是**每个状态各记一份**：每进入该状态 +1，够数就播一次、清零，
-然后重新掷一个 8~15 的随机间隔。平常心没有录音（她平常不说话）。
+然后重新掷一个 5~8 的随机间隔。平常心没有录音（她平常不说话）。
 DSH 设置页 **sayaka** 分区里的「配音」开关能一键关掉声音。
 
 ---
@@ -228,7 +247,8 @@ dsh-pet-sayaka/
     ├── build-assets.mjs  # 把原始素材归一化成 assets/pet（需要 sharp）
     ├── trace-bubble.mjs  # 把云朵图描摹成 SVG path → assets/pet/bubble.json（需要 sharp）
     ├── test-state.mjs    # 状态机自测（含真实事件信封夹具）
-    └── test-routes.mjs   # HTTP 路由自测（含目录穿越、SSE 推送）
+    ├── test-routes.mjs   # HTTP 路由自测（含目录穿越、SSE 推送）
+    └── test-quips.mjs    # 情境台词自测（错误五次气不气、计数会不会清零）
 ```
 
 ## 原理
@@ -336,6 +356,7 @@ node tools/build-assets.mjs "D:/app edit/sayaka" "D:/app edit/sayaka/dsh-pet-say
 ```bash
 node tools/test-state.mjs    # 状态机 + 独白配置：80 条断言（含真实会话日志里的两种事件信封）
 node tools/test-routes.mjs   # 路由 + 素材（精灵与配音）+ 气泡数据 + 文字框：61 条断言（快照 / 素材 / 防目录穿越 / SSE 推送与断开 / 到期自动推送）
+node tools/test-quips.mjs    # 情境台词：75 条断言（每档台词、错误五次的台词与表情/录音、最后一档清零后重新数）
 ```
 
 ## 已知边界
