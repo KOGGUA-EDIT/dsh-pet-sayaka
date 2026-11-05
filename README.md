@@ -2,6 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/dsh-pet-sayaka?color=blue)](https://www.npmjs.com/package/dsh-pet-sayaka)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![release](https://img.shields.io/github/v/release/KOGGUA-EDIT/dsh-pet-sayaka?display_name=tag&sort=semver)](https://github.com/KOGGUA-EDIT/dsh-pet-sayaka/releases)
 
 > **English summary** — Sayaka Miki desktop pet for the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) Web UI. Live session state is mapped onto eight sprites (idle sleep, sword while shell tools run, sad on failure, happy on success, thinking, calm, shy when poked, angry after five pokes in ten seconds); sprites swap instantly with no cross-fade; and a short per-state voice line plays every 8–15 encounters with that state, plus a one-time "good morning" line after the app starts.
 
@@ -89,6 +90,8 @@ dsh plugin --profile web add github:KOGGUA-EDIT/dsh-pet-sayaka
 ```
 
 装完重启一次 Web 服务（DSH 标题栏「⋯」→ 重启 Web 服务），刷新页面就能在右下角看到她。
+
+每个版本都打了 tag 并附上打包好的 tgz，在 [Releases](https://github.com/KOGGUA-EDIT/dsh-pet-sayaka/releases) 上。
 
 ## 安装状态（本机）
 
