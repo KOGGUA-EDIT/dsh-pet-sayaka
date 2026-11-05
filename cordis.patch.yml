@@ -35,11 +35,19 @@
         calmMs: 60000
         # 被点一下的「害羞」时长
         shyMs: 1000
+        # 十秒内点到第几下才开始害羞（前两下她当没看见）
+        shyThreshold: 3
         # 十秒内点够几下算「生气」
         clickThreshold: 5
         clickWindowMs: 10000
         # 「生气」持续时长
         angryMs: 3000
+        # 继续点够几下会「气炸」（第二形态）
+        poke2Threshold: 10
+        # 「气炸」持续多久
+        angry2Ms: 6000
+        # 一轮对话（整个回合）跑完之后「累倒」多久
+        tiredMs: 5000
         # 是否跟随子 Agent 的活动
         includeSubagents: true
         # 独白气泡出现多久（毫秒）—— 每个状态刚切换时冒一下
@@ -53,6 +61,10 @@
         #   shy: 不要这样啦
         #   angry: 我生气了！！！
         #   calm: 快来吧
+        #   tired: 呼…累死了
+        #   polish: ♪
+        #   drag: 喂喂！
+        #   angry2: 你再戳一下试试！
         #   sleep: ''            # 空字符串 = 不说话
         # 哪些工具调用算「跑代码」（命中即拔刀）
         runToolPattern: '^(bash|pwsh|powershell|shell|sh|cmd|zsh|fish|exec|command|terminal|run)$'

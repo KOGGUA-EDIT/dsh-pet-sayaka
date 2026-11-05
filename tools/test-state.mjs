@@ -117,11 +117,17 @@ console.log('5) 有错误就伤心 5 秒');
 	const pet4 = new PetState();
 	pet4.handleSessionEvent(session, { type: 'turn/end', seq: 9, data: { reason: { kind: 'max-tokens' } } });
 	check('超长结束 → 伤心', act(pet4), 'sad');
-	// 正常结束 / 用户中止 / 等待批准都不该伤心
-	for (const kind of ['completed', 'aborted', 'blocked']) {
+	// 正常结束 → 累倒 5 秒（不是伤心）；用户中止 / 等待批准都不该有反应
+	const pet6 = new PetState();
+	pet6.handleSessionEvent(session, { type: 'turn/end', seq: 9, data: { reason: { kind: 'completed' } } });
+	check('completed → 累倒', act(pet6), 'tired');
+	const tiredLeft = pet6.activityAt().until - Date.now();
+	check('累倒大约 5 秒', tiredLeft > 4800 && tiredLeft <= 5000, true);
+	check('累倒过期 → 睡觉', act(pet6, pet6.activityAt().until + 1), 'sleep');
+	for (const kind of ['aborted', 'blocked']) {
 		const pet5 = new PetState();
 		pet5.handleSessionEvent(session, { type: 'turn/end', seq: 9, data: { reason: { kind } } });
-		check(`${kind} → 不伤心`, act(pet5), 'sleep');
+		check(`${kind} → 不伤心也不累倒`, act(pet5), 'sleep');
 	}
 }
 
@@ -176,6 +182,7 @@ console.log('10) 快照字段（浏览器半侧依赖）');
 	check('snapshot.activity', typeof snap.activity, 'string');
 	check('snapshot.config.size', typeof snap.config.size, 'number');
 	check('snapshot.config.clickThreshold', snap.config.clickThreshold, 5);
+	check('snapshot.config.shyThreshold', snap.config.shyThreshold, 3);
 	check('snapshot.rev', typeof snap.rev, 'number');
 	check('snapshot.stats.events', typeof snap.stats.events, 'number');
 }
@@ -294,13 +301,38 @@ console.log('14) 思考状态（turn/start → turn/end）');
 	check('高兴过期 → 回到思考（回合还没结束）', act(pet, Date.now() + 6000), 'thinking');
 
 	pet.handleSessionEvent(session, { type: 'turn/end', seq: 9, data: { reason: { kind: 'completed' } } });
-	check('回合结束 → 平常心（这是第一次跑完）', act(pet), 'calm');
+	check('回合结束 → 先累倒', act(pet), 'tired');
+	check('累倒过期 → 平常心（这是第一次跑完）', act(pet, Date.now() + 6000), 'calm');
 
-	// 第二个回合结束就是睡觉（平常心只给第一次）
+	// 第二个回合结束：累倒 → 睡觉（平常心只给第一次）
 	pet.handleSessionEvent(session, { type: 'turn/start', seq: 10, data: { turn: 2 } });
 	check('第二回合 → 思考', act(pet), 'thinking');
 	pet.handleSessionEvent(session, { type: 'turn/end', seq: 11, data: { reason: { kind: 'completed' } } });
-	check('第二回合结束 → 睡觉', act(pet, Date.now() + 70000), 'sleep');
+	check('第二回合结束 → 累倒', act(pet), 'tired');
+	check('第二回合累倒完 → 睡觉', act(pet, Date.now() + 70000), 'sleep');
+}
+
+console.log('14b) 累倒的配置与「另一个会话还在跑就不瘫」');
+{
+	const pet = new PetState({ tiredMs: 8000 });
+	pet.handleSessionEvent(session, { type: 'turn/end', seq: 2, data: { reason: { kind: 'completed' } } });
+	const left = pet.activityAt().until - Date.now();
+	check('tiredMs 可覆盖', left > 7800 && left <= 8000, true);
+	check('activityAt 带截止时间', typeof pet.activityAt().until, 'number');
+
+	// 另一个会话还在思考：这一轮结束不该让她瘫在那儿
+	const a = new PetState();
+	const other = { header: { id: 's2' } };
+	a.handleSessionEvent(other, { type: 'turn/start', seq: 1, data: { turn: 1 } });
+	a.handleSessionEvent(session, { type: 'turn/end', seq: 2, data: { reason: { kind: 'completed' } } });
+	check('还有会话在跑 → 不累倒', act(a), 'thinking');
+
+	const snap = new PetState().snapshot();
+	check('ACTIVITIES 含累倒', snap.activities.includes('tired'), true);
+	check('snapshot.config.tiredMs', snap.config.tiredMs, 5000);
+	check('snapshot.config.poke2Threshold', snap.config.poke2Threshold, 10);
+	check('snapshot.config.angry2Ms', snap.config.angry2Ms, 6000);
+	check('累倒台词', snap.config.monologues.tired, '呼…累死了');
 }
 
 console.log('15) 思考状态的兜底与清理');
@@ -356,6 +388,53 @@ console.log('16) 独白配置');
 	check('其余台词不受影响', custom.config.monologues.sword, '武装保卫见泷原！');
 	check('时长可覆盖', custom.config.monologueMs, 2000);
 }
+console.log('17) 残留清理（"状态变了但桌宠不变"的根因）');
+{
+	// 一次 tool/call 永远等不到结果（回合被中断 / 结果事件丢了）：不能让她一直举着刀
+	const a = new PetState();
+	a.handleSessionEvent(session, call('c-leak', 'pwsh'));
+	check('泄漏的调用先算拔刀', act(a), 'sword');
+	a.running.get('c-leak').since = Date.now() - 200000; // 假装已经卡了 200 秒
+	a.sweep();
+	check('超过 runStaleMs 后清掉', a.running.size, 0);
+	check('清掉后不再拔刀', act(a), 'sleep');
+	check('清理有计数', a.snapshot().stats.swept, 1);
+
+	// 回合结束：该会话还在"跑"的调用不可能再有结果，立刻清掉
+	const b = new PetState();
+	b.handleSessionEvent(session, call('c-turn', 'bash'));
+	b.handleSessionEvent(session, { type: 'turn/end', seq: 2, data: { reason: { kind: 'aborted' } } });
+	check('回合中止 → 在跑列表清空', b.running.size, 0);
+
+	// 结果里没带 callId，但带了工具名：同名的只有一个就认它
+	const c = new PetState();
+	c.handleSessionEvent(session, call('c-bash', 'bash'));
+	c.handleSessionEvent(session, call('c-pwsh', 'pwsh'));
+	c.handleSessionEvent(session, {
+		type: 'tool/result',
+		seq: 9,
+		data: { message: { name: 'pwsh', content: [{ type: 'text', text: 'ok' }] } },
+	});
+	check('按工具名认领 pwsh', c.running.has('c-pwsh'), false);
+	check('另一个 bash 还在跑', c.running.has('c-bash'), true);
+
+	// 思考标记也有超时：turn/end 丢了不能永远思考下去
+	const d = new PetState();
+	d.handleSessionEvent(session, { type: 'turn/start', seq: 1, data: { turn: 1 } });
+	d.thinking.set('s1', Date.now() - 2000000);
+	d.sweep();
+	check('思考超时被清掉', act(d), 'sleep');
+
+	// 诊断字段：卡住时能从 /sayaka/state 看出来
+	const e = new PetState();
+	e.handleSessionEvent(session, call('c-age', 'bash'));
+	e.running.get('c-age').since = Date.now() - 30000;
+	const stats = e.snapshot().stats;
+	check('stats.running', stats.running, 1);
+	check('stats.thinking', stats.thinking, 0);
+	check('stats.oldestRunMs 能看出卡了多久', stats.oldestRunMs >= 29000, true);
+}
+
 console.log(`\n通过 ${passed}，失败 ${failed}`);
 
 process.exit(failed === 0 ? 0 : 1);
