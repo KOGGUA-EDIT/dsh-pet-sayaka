@@ -269,9 +269,16 @@ function equal(actual, expected, message) {
 {
 	check(SOURCE.includes('dragMirror') === false, '镜像逻辑已移除');
 	check(SOURCE.includes('is-mirrored') === false, '镜像样式已移除');
+	// 删镜像时漏改过 setMirror：指针抬起时抛 ReferenceError，handlePoke 永远轮不到 → 点击完全没反应
+	check(/setMirror|mirror\s*[:=]/.test(SOURCE) === false, '没有残留的镜像状态（否则点击会被打断）');
 	check(/sprite === display \? ' is-on' : ''/.test(SOURCE), '精灵只按当前状态切可见性');
 	check(SOURCE.includes("setDragging(true)"), '拖动开始换「被拖走」那张');
 	check(SOURCE.includes("voice.play('drag')"), '拖动开始喊一声');
+	// 抬指后没拖动过才算「点了一下」
+	const upAt = SOURCE.indexOf('const handlePointerUp');
+	const upEnd = SOURCE.indexOf('const now = Date.now();', upAt);
+	const upBlock = upAt > 0 && upEnd > upAt ? SOURCE.slice(upAt, upEnd) : '';
+	check(upAt > 0 && upBlock.includes('handlePoke()'), '没拖动就抬手 → 算点了一下');
 }
 
 console.log(`情境台词自测：通过 ${pass}，失败 ${fail}`);
